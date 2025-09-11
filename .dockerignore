@@ -1,0 +1,74 @@
+# Archivos y directorios que no deben incluirse en la imagen Docker
+
+# Directorio de compilación de Maven
+target/
+
+# Archivos de control de versiones
+.git/
+.gitignore
+.gitattributes
+
+# Archivos de configuración del IDE
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Archivos temporales del sistema
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+# Archivos de logs
+*.log
+logs/
+
+# Archivos de configuración local
+application-local.yml
+application-local.properties
+
+# Archivos de documentación
+README.md
+HELP.md
+*.md
+
+# Archivos de Docker (mantener el Dockerfile principal)
+Dockerfile.dev
+Dockerfile.test
+docker-compose*.yml
+.dockerignore
+
+# Archivos de Maven wrapper (se copian explícitamente en el Dockerfile)
+.mvn/wrapper/maven-wrapper.jar
+
+# Archivos de backup
+*.bak
+*.backup
+
+# Archivos de configuración de desarrollo
+.env
+.env.local
+.env.development
+
+# Archivos de test
+src/test/
+
+# Archivos de configuración de CI/CD
+.github/
+.gitlab-ci.yml
+Jenkinsfile
+
+# Archivos de configuración de herramientas
+.editorconfig
+.prettierrc
+.eslintrc*
+
+# Archivos de configuración de Java
+.classpath
+.project
+.settings/
+
+# Archivos de configuración de Spring Boot
+.spring-boot-devtools.properties
