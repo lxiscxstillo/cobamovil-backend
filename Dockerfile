@@ -1,5 +1,7 @@
+# ================================
 # Fase 1: Construcción del proyecto
-FROM openjdk:17-jdk-slim AS build
+# ================================
+FROM eclipse-temurin:17-jdk AS build
 
 # Establecer directorio de trabajo
 WORKDIR /app
@@ -18,8 +20,11 @@ COPY src src
 # Construir el proyecto (descargar dependencias y compilar)
 RUN ./mvnw clean package -DskipTests
 
-# Fase 2: Imagen de ejecución (más liviana)
-FROM openjdk:17-jre-slim AS runtime
+
+# ================================
+# Fase 2: Imagen de ejecución
+# ================================
+FROM eclipse-temurin:17-jre AS runtime
 
 # Crear usuario no-root para seguridad
 RUN addgroup --system spring && adduser --system spring --ingroup spring
@@ -39,7 +44,7 @@ USER spring:spring
 # Exponer puerto
 EXPOSE 8080
 
-# Configurar variables de entorno
+# Configurar variables de entorno (ajustables en Render)
 ENV JAVA_OPTS="-Xmx512m -Xms256m"
 
 # Comando de ejecución
