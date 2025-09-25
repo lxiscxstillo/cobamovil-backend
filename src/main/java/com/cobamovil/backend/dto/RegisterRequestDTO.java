@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public class UserCreateDTO {
+public class RegisterRequestDTO {
     
     @NotBlank(message = "Username es requerido")
     @Size(min = 3, max = 50, message = "Username debe tener entre 3 y 50 caracteres")
@@ -24,7 +24,14 @@ public class UserCreateDTO {
     private String password;
     
     // Constructor vacío
-    public UserCreateDTO() {}
+    public RegisterRequestDTO() {}
+    
+    // Constructor completo
+    public RegisterRequestDTO(String username, String email, String password) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+    }
     
     // Getters y Setters
     public String getUsername() { return username; }

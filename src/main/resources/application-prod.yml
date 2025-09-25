@@ -1,18 +1,50 @@
 spring:
   datasource:
-    url: jdbc:postgresql://dpg-d31bpummcj7s7389dn60-a/cobamovil_db
-    username: cobamovil_user
-    password: 3XRLm2xEv9mGpBwo59woLXo4lVZDWKEX
+    url: ${DATABASE_URL:jdbc:postgresql://dpg-d31bpummcj7s7389dn60-a/cobamovil_db}
+    username: ${DATABASE_USERNAME:cobamovil_user}
+    password: ${DATABASE_PASSWORD:3XRLm2xEv9mGpBwo59woLXo4lVZDWKEX}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-    show-sql: true
+    show-sql: false
 
   flyway:
     enabled: true
-    url: jdbc:postgresql://dpg-d31bpummcj7s7389dn60-a/cobamovil_db
-    user: cobamovil_user
-    password: 3XRLm2xEv9mGpBwo59woLXo4lVZDWKEX
+    url: ${DATABASE_URL:jdbc:postgresql://dpg-d31bpummcj7s7389dn60-a/cobamovil_db}
+    user: ${DATABASE_USERNAME:cobamovil_user}
+    password: ${DATABASE_PASSWORD:3XRLm2xEv9mGpBwo59woLXo4lVZDWKEX}
+
+server:
+  port: ${PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: false
+
+# Configuración JWT para producción
+app:
+  jwt:
+    secret: ${JWT_SECRET:mySecretKey123456789012345678901234567890}
+    expiration: ${JWT_EXPIRATION:86400}
+
+logging:
+  level:
+    com.cobamovil.backend: INFO
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

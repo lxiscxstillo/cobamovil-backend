@@ -8,6 +8,7 @@ import com.cobamovil.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,10 +19,12 @@ import java.util.Optional;
 public class UserService {
     
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
     
     // Crear usuario
@@ -36,11 +39,11 @@ public class UserService {
             throw new RuntimeException("El email '" + userCreateDTO.getEmail() + "' ya existe");
         }
         
-        // Crear el usuario
+        // Crear el usuario con password encriptado
         User user = new User(
             userCreateDTO.getUsername(),
             userCreateDTO.getEmail(),
-            userCreateDTO.getPassword() // TODO: Encriptar password más adelante
+            passwordEncoder.encode(userCreateDTO.getPassword())
         );
         
         User savedUser = userRepository.save(user);
@@ -94,7 +97,7 @@ public class UserService {
         }
         
         if (userUpdateDTO.getPassword() != null && !userUpdateDTO.getPassword().trim().isEmpty()) {
-            user.setPassword(userUpdateDTO.getPassword()); // TODO: Encriptar password más adelante
+            user.setPassword(passwordEncoder.encode(userUpdateDTO.getPassword()));
         }
         
         User updatedUser = userRepository.save(user);
@@ -121,6 +124,8 @@ public class UserService {
             user.getId(),
             user.getUsername(),
             user.getEmail(),
+            user.getRole(),
+            user.isEnabled(),
             user.getCreatedAt(),
             user.getUpdatedAt()
         );

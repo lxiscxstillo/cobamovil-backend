@@ -1,16 +1,9 @@
-services:
-  - type: web
-    name: cobamovil-backend
-    env: java
-    plan: free
-    buildCommand: ./mvnw clean install -DskipTests
-    startCommand: java -jar target/cobamovil-backend-0.0.1-SNAPSHOT.jar
-    envVars:
-      - key: SPRING_PROFILES_ACTIVE
-        value: prod
-      - key: SPRING_DATASOURCE_URL
-        value: jdbc:postgresql://dpg-d31bpummcj7s7389dn60-a/cobamovil_db
-      - key: SPRING_DATASOURCE_USERNAME
-        value: cobamovil_user
-      - key: SPRING_DATASOURCE_PASSWORD
-        value: 3XRLm2xEv9mGpBwo59woLXo4lVZDWKEX
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true

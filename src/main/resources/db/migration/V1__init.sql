@@ -12,6 +12,6 @@ CREATE TABLE users (
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_email ON users(email);
 
--- Insertar un usuario de prueba
+-- Insertar un usuario de prueba (password: Admin123!)
 INSERT INTO users (username, email, password) 
-VALUES ('admin', 'admin@cobamovil.com', '$2a$10$dummyhash');
+VALUES ('admin', 'admin@cobamovil.com', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDi');

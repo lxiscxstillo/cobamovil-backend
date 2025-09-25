@@ -44,3 +44,18 @@ springdoc:
     path: /swagger-ui.html
     enabled: true
   show-actuator: true
+
+# Configuración JWT
+app:
+  jwt:
+    secret: mySecretKey123456789012345678901234567890
+    expiration: 86400 # 24 horas en segundos
+
+# Configuración de logging
+logging:
+  level:
+    com.cobamovil.backend: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

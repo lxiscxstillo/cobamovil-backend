@@ -29,9 +29,23 @@ public class User {
     private String email;
     
     @NotBlank(message = "Password es requerido")
-    @Size(min = 6, message = "Password debe tener al menos 6 caracteres")
     @Column(nullable = false)
     private String password;
+    
+    @Column(nullable = false, length = 20)
+    private String role = "USER";
+    
+    @Column(name = "account_non_expired", nullable = false)
+    private boolean accountNonExpired = true;
+    
+    @Column(name = "account_non_locked", nullable = false)
+    private boolean accountNonLocked = true;
+    
+    @Column(name = "credentials_non_expired", nullable = false)
+    private boolean credentialsNonExpired = true;
+    
+    @Column(name = "enabled", nullable = false)
+    private boolean enabled = true;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -41,14 +55,21 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
-    // Constructor vacío (requerido por JPA)
+    // Constructores
     public User() {}
     
-    // Constructor para crear usuarios
     public User(String username, String email, String password) {
         this.username = username;
         this.email = email;
         this.password = password;
+        this.role = "USER";
+    }
+    
+    public User(String username, String email, String password, String role) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.role = role;
     }
     
     // Getters y Setters
@@ -64,6 +85,21 @@ public class User {
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
     
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+    
+    public boolean isAccountNonExpired() { return accountNonExpired; }
+    public void setAccountNonExpired(boolean accountNonExpired) { this.accountNonExpired = accountNonExpired; }
+    
+    public boolean isAccountNonLocked() { return accountNonLocked; }
+    public void setAccountNonLocked(boolean accountNonLocked) { this.accountNonLocked = accountNonLocked; }
+    
+    public boolean isCredentialsNonExpired() { return credentialsNonExpired; }
+    public void setCredentialsNonExpired(boolean credentialsNonExpired) { this.credentialsNonExpired = credentialsNonExpired; }
+    
+    public boolean isEnabled() { return enabled; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     
@@ -76,6 +112,8 @@ public class User {
                 "id=" + id +
                 ", username='" + username + '\'' +
                 ", email='" + email + '\'' +
+                ", role='" + role + '\'' +
+                ", enabled=" + enabled +
                 ", createdAt=" + createdAt +
                 '}';
     }

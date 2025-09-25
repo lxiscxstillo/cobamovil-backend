@@ -7,6 +7,8 @@ public class UserResponseDTO {
     private Long id;
     private String username;
     private String email;
+    private String role;  // Cambiar a String
+    private boolean enabled;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -14,11 +16,13 @@ public class UserResponseDTO {
     public UserResponseDTO() {}
     
     // Constructor completo
-    public UserResponseDTO(Long id, String username, String email, 
-                          LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public UserResponseDTO(Long id, String username, String email, String role, 
+                          boolean enabled, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.username = username;
         this.email = email;
+        this.role = role;
+        this.enabled = enabled;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -32,6 +36,12 @@ public class UserResponseDTO {
     
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+    
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+    
+    public boolean isEnabled() { return enabled; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
