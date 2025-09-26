@@ -1,9 +1,30 @@
-spring:
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        use_sql_comments: true
+services:
+  - type: web
+    name: cobamovil-backend
+    env: java
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java -jar target/*.jar --spring.profiles.active=render
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: render
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cobamovil-db
+          property: connectionString
+      - key: DATABASE_USERNAME
+        fromDatabase:
+          name: cobamovil-db
+          property: user
+      - key: DATABASE_PASSWORD
+        fromDatabase:
+          name: cobamovil-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: 86400
+
+databases:
+  - name: cobamovil-db
+    databaseName: cobamovil_db
+    user: cobamovil_user

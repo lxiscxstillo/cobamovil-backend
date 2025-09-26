@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://dpg-d31bpummcj7s7389dn60-a/cobamovil_db}
-    username: ${DATABASE_USERNAME:cobamovil_user}
-    password: ${DATABASE_PASSWORD:3XRLm2xEv9mGpBwo59woLXo4lVZDWKEX}
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -13,9 +13,9 @@ spring:
 
   flyway:
     enabled: true
-    url: ${DATABASE_URL:jdbc:postgresql://dpg-d31bpummcj7s7389dn60-a/cobamovil_db}
-    user: ${DATABASE_USERNAME:cobamovil_user}
-    password: ${DATABASE_PASSWORD:3XRLm2xEv9mGpBwo59woLXo4lVZDWKEX}
+    url: ${DATABASE_URL}
+    user: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
     baseline-on-migrate: true
     validate-on-migrate: true
 
@@ -41,7 +41,7 @@ springdoc:
 # Configuración JWT para producción
 app:
   jwt:
-    secret: ${JWT_SECRET:mySecretKey123456789012345678901234567890}
+    secret: ${JWT_SECRET}
     expiration: ${JWT_EXPIRATION:86400}
 
 logging:
