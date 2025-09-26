@@ -3,29 +3,44 @@ package com.cobamovil.backend.controller;
 import com.cobamovil.backend.dto.RegisterRequestDTO;
 import com.cobamovil.backend.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.cobamovil.backend.service.UserDetailsServiceImpl;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.security.test.context.support.WithMockUser;
 
-@WebMvcTest(controllers = AuthController.class)
 class AuthControllerTest {
+    @Mock
+    private com.cobamovil.backend.security.JwtTokenProvider jwtTokenProvider;
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private AuthService authService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Mock
+    private UserDetailsServiceImpl userDetailsService;
+
+    @InjectMocks
+    private AuthController authController;
+
+    private MockMvc mockMvc;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        mockMvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(authController).build();
+    }
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
+    @WithMockUser
     void testRegisterUser() throws Exception {
         RegisterRequestDTO registerRequest = new RegisterRequestDTO(
             "testuser",

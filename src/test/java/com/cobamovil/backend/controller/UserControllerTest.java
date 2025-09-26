@@ -1,31 +1,46 @@
 package com.cobamovil.backend.controller;
 
-import com.cobamovil.backend.dto.UserCreateDTO;
+// ...existing code...
 import com.cobamovil.backend.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+// ...existing code...
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = UserController.class)
+import org.springframework.security.test.context.support.WithMockUser;
+
 class UserControllerTest {
+    @Mock
+    private com.cobamovil.backend.security.JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    @Autowired
-    private MockMvc mockMvc;
+    // Eliminado campo duplicado
 
-    @MockBean
+    @Mock
     private UserService userService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Mock
+    private com.cobamovil.backend.security.JwtTokenProvider jwtTokenProvider;
+
+    @InjectMocks
+    private UserController userController;
+
+    private MockMvc mockMvc;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        mockMvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(userController).build();
+    }
 
     @Test
+    @WithMockUser
     void testGetAllUsers() throws Exception {
         mockMvc.perform(get("/api/users")
                 .contentType(MediaType.APPLICATION_JSON))
