@@ -1,8 +1,11 @@
+server:
+  port: ${PORT:8080} # Render asigna esta variable automáticamente
+
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://dpg-d31bpummcj7s7389dn60-a/cobamovil_db}
-    username: ${DATABASE_USERNAME:cobamovil_user}
-    password: ${DATABASE_PASSWORD:3XRLm2xEv9mGpBwo59woLXo4lVZDWKEX}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -13,14 +16,11 @@ spring:
 
   flyway:
     enabled: true
-    url: ${DATABASE_URL:jdbc:postgresql://dpg-d31bpummcj7s7389dn60-a/cobamovil_db}
-    user: ${DATABASE_USERNAME:cobamovil_user}
-    password: ${DATABASE_PASSWORD:3XRLm2xEv9mGpBwo59woLXo4lVZDWKEX}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    user: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     baseline-on-migrate: true
     validate-on-migrate: true
-
-server:
-  port: ${PORT:8080}
 
 management:
   endpoints:
@@ -38,7 +38,6 @@ springdoc:
     path: /swagger-ui.html
     enabled: false
 
-# Configuración JWT para producción
 app:
   jwt:
     secret: ${JWT_SECRET:mySecretKey123456789012345678901234567890}
@@ -51,3 +50,4 @@ logging:
     org.flywaydb: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
