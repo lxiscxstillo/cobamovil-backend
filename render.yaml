@@ -20,7 +20,7 @@ services:
           name: cobamovil-db
           property: password
       - key: JWT_SECRET
-        generateValue: true
+        value: mySecretKey123456789012345678901234567890
       - key: JWT_EXPIRATION
         value: 86400
 

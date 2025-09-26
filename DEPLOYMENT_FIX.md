@@ -1,15 +1,18 @@
 # Solución para el Error de Despliegue en Render
 
-## Problema Identificado
+## Problemas Identificados
 
-El error `java.lang.IllegalArgumentException: 'url' must start with "jdbc"` en Render se debía a que las variables de entorno de la base de datos no estaban siendo configuradas correctamente para Flyway.
+1. **Error inicial**: `java.lang.IllegalArgumentException: 'url' must start with "jdbc"` - Las variables de entorno de la base de datos no estaban siendo configuradas correctamente para Flyway.
+
+2. **Error secundario**: `Could not resolve placeholder 'JWT_SECRET'` - La variable de entorno JWT_SECRET no tenía un valor por defecto y no estaba siendo proporcionada por Render.
 
 ## Cambios Realizados
 
 ### 1. Archivo `application-render.yml` (NUEVO)
 - Creado un perfil específico para Render
-- Configuración simplificada que usa directamente las variables de entorno sin valores por defecto
+- Configuración simplificada que usa directamente las variables de entorno
 - Configuración de Flyway optimizada para despliegue
+- **CORREGIDO**: JWT_SECRET ahora tiene un valor por defecto para evitar errores de resolución
 
 ### 2. Archivo `Dockerfile` (MODIFICADO)
 - Cambiado el perfil activo de `prod` a `render`
@@ -21,6 +24,7 @@ El error `java.lang.IllegalArgumentException: 'url' must start with "jdbc"` en R
   - Variables de entorno mapeadas desde la base de datos
   - Comandos de build y start optimizados
   - Base de datos PostgreSQL configurada
+  - **CORREGIDO**: JWT_SECRET configurado con un valor fijo en lugar de generar uno automáticamente
 
 ### 4. Archivo `application-prod.yml` (MEJORADO)
 - Agregadas configuraciones adicionales de Flyway:
