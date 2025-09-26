@@ -9,7 +9,10 @@ public class RegisterRequestDTO {
     
     @NotBlank(message = "Username es requerido")
     @Size(min = 3, max = 50, message = "Username debe tener entre 3 y 50 caracteres")
-    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username solo puede contener letras, números y guiones bajos")
+    @Pattern(
+        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]+$",
+        message = "Password debe contener al menos una letra minúscula, una mayúscula, un número y un carácter especial"
+    )
     private String username;
     
     @NotBlank(message = "Email es requerido")
