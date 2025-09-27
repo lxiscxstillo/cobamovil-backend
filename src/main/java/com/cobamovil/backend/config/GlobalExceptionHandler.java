@@ -107,4 +107,20 @@ public class GlobalExceptionHandler {
         
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
+
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidJson(Exception ex, WebRequest request) {
+        logger.warn("JSON malformado en {}: {}", request.getDescription(false), ex.getMessage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.BAD_REQUEST.value());
+        response.put("error", "Bad Request");
+        response.put("message", "El JSON enviado no es válido");
+        response.put("path", request.getDescription(false));
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+
 }

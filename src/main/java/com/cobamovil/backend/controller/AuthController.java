@@ -85,15 +85,9 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .body("Demasiados intentos. Intenta de nuevo en un minuto.");
         }
-        try {
-            AuthResponseDTO response = authService.register(registerRequest);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("ya existe")) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).build();
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+
+        AuthResponseDTO response = authService.register(registerRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     
     @PostMapping("/logout")
