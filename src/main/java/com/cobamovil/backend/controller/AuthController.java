@@ -64,12 +64,9 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .body("Demasiados intentos. Intenta de nuevo en un minuto.");
         }
-        try {
-            AuthResponseDTO response = authService.login(loginRequest);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+
+        AuthResponseDTO response = authService.login(loginRequest);
+        return ResponseEntity.ok(response);
     }
     
     @PostMapping("/register")
@@ -109,3 +106,4 @@ public class AuthController {
         return ResponseEntity.ok("Logout exitoso: token revocado");
     }
 }
+
