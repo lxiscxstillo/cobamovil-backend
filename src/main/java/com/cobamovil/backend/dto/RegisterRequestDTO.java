@@ -9,10 +9,6 @@ public class RegisterRequestDTO {
     
     @NotBlank(message = "Username es requerido")
     @Size(min = 3, max = 50, message = "Username debe tener entre 3 y 50 caracteres")
-    @Pattern(
-        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]+$",
-        message = "Password debe contener al menos una letra minúscula, una mayúscula, un número y un carácter especial"
-    )
     private String username;
     
     @NotBlank(message = "Email es requerido")
@@ -22,8 +18,10 @@ public class RegisterRequestDTO {
     
     @NotBlank(message = "Password es requerido")
     @Size(min = 8, message = "Password debe tener al menos 8 caracteres")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&].*$", 
-             message = "Password debe contener al menos una letra minúscula, una mayúscula, un número y un carácter especial")
+    @Pattern(
+        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).+$",
+        message = "Password debe contener al menos una letra minúscula, una mayúscula, un número y un carácter especial"
+    )
     private String password;
     
     // Constructor vacío
