@@ -17,28 +17,27 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-// ...existing code...
 
 @Service
 @Transactional
 public class AuthService {
-    
+
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
-    
+
     @Autowired
     public AuthService(AuthenticationManager authenticationManager,
-                      UserRepository userRepository,
-                      PasswordEncoder passwordEncoder,
-                      JwtTokenProvider tokenProvider) {
+                       UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtTokenProvider tokenProvider) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
     }
-    
+
     public AuthResponseDTO login(LoginRequestDTO loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -47,15 +46,15 @@ public class AuthService {
                     loginRequest.getPassword()
                 )
             );
-            
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = tokenProvider.generateToken(authentication);
-            
+
             User user = userRepository.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-            
-            LocalDateTime expiresAt = LocalDateTime.now().plusDays(1); // Token válido por 1 día
-            
+
+            LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(tokenProvider.getExpirationInSeconds());
+
             return new AuthResponseDTO(
                 jwt,
                 user.getId(),
@@ -64,41 +63,40 @@ public class AuthService {
                 user.getRole(),
                 expiresAt
             );
-            
+
         } catch (Exception e) {
             throw new BadCredentialsException("Credenciales inválidas");
         }
     }
-    
+
     public AuthResponseDTO register(RegisterRequestDTO registerRequest) {
-        // Verificar que el username no exista
+        // Validar duplicados
         if (userRepository.existsByUsername(registerRequest.getUsername())) {
             throw new RuntimeException("El username '" + registerRequest.getUsername() + "' ya existe");
         }
-        
-        // Verificar que el email no exista
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
             throw new RuntimeException("El email '" + registerRequest.getEmail() + "' ya existe");
         }
-        
-        // Crear el usuario con password encriptado
+
+        // Crear usuario
         User user = new User(
             registerRequest.getUsername(),
             registerRequest.getEmail(),
             passwordEncoder.encode(registerRequest.getPassword())
         );
-        
         User savedUser = userRepository.save(user);
-        
-        // Generar token para el nuevo usuario
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-            savedUser.getUsername(),
-            savedUser.getPassword()
+
+        // Autenticar con username y password plano para generar token
+        Authentication authentication = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(
+                registerRequest.getUsername(),
+                registerRequest.getPassword()
+            )
         );
-        
+
         String jwt = tokenProvider.generateToken(authentication);
-        LocalDateTime expiresAt = LocalDateTime.now().plusDays(1);
-        
+        LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(tokenProvider.getExpirationInSeconds());
+
         return new AuthResponseDTO(
             jwt,
             savedUser.getId(),
@@ -109,3 +107,4 @@ public class AuthService {
         );
     }
 }
+

@@ -15,23 +15,20 @@ import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
-    // Blacklist de JWT (jti)
     private static final Set<String> tokenBlacklist = ConcurrentHashMap.newKeySet();
-
-
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
 
     @Value("${app.jwt.secret}")
     private String jwtSecret;
 
+    @Value("${app.jwt.expiration:86400}") // en segundos
+    private int jwtExpirationInSeconds;
+
     private void validateSecret() {
         if (jwtSecret == null || jwtSecret.length() < 32) {
-            throw new IllegalStateException("El secreto JWT debe tener al menos 32 caracteres y estar definido por variable de entorno segura.");
+            throw new IllegalStateException("El secreto JWT debe tener al menos 32 caracteres.");
         }
     }
-
-    @Value("${app.jwt.expiration:86400}")
-    private int jwtExpirationInMs;
 
     private SecretKey getSigningKey() {
         validateSecret();
@@ -41,20 +38,18 @@ public class JwtTokenProvider {
     public String generateToken(Authentication authentication) {
         UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
         long nowMillis = System.currentTimeMillis();
-        long expMillis = nowMillis + jwtExpirationInMs * 1000L;
+        long expMillis = nowMillis + (jwtExpirationInSeconds * 1000L);
         String jti = java.util.UUID.randomUUID().toString();
 
-        JwtBuilder builder = Jwts.builder()
+        return Jwts.builder()
             .subject(userPrincipal.getUsername())
+            .id(jti)
             .issuedAt(new Date(nowMillis))
             .expiration(new Date(expMillis))
-            .claim("jti", jti)
-            .signWith(getSigningKey());
-
-        return builder.compact();
+            .signWith(getSigningKey())
+            .compact();
     }
 
-    // Método para revocar un token (agregar jti a blacklist)
     public void revokeToken(String token) {
         String jti = getJtiFromJWT(token);
         if (jti != null) {
@@ -62,15 +57,13 @@ public class JwtTokenProvider {
         }
     }
 
-    // Extraer jti del token
     public String getJtiFromJWT(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        Object jtiObj = claims.get("jti");
-        return jtiObj != null ? jtiObj.toString() : null;
+        return claims.getId();
     }
 
     public String getUsernameFromJWT(String token) {
@@ -79,7 +72,6 @@ public class JwtTokenProvider {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-
         return claims.getSubject();
     }
 
@@ -90,23 +82,18 @@ public class JwtTokenProvider {
                 .build()
                 .parseSignedClaims(authToken)
                 .getPayload();
-            String jti = claims.get("jti", String.class);
-            if (jti != null && tokenBlacklist.contains(jti)) {
-                logger.warn("Token JWT revocado (jti en blacklist): {}", jti);
+            if (claims.getId() != null && tokenBlacklist.contains(claims.getId())) {
+                logger.warn("Token JWT revocado (jti en blacklist): {}", claims.getId());
                 return false;
             }
             return true;
-        } catch (SecurityException ex) {
-            logger.error("Token JWT inválido: {}", ex.getMessage());
-        } catch (MalformedJwtException ex) {
-            logger.error("Token JWT malformado: {}", ex.getMessage());
-        } catch (ExpiredJwtException ex) {
-            logger.error("Token JWT expirado: {}", ex.getMessage());
-        } catch (UnsupportedJwtException ex) {
-            logger.error("Token JWT no soportado: {}", ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            logger.error("Claims JWT vacíos: {}", ex.getMessage());
+        } catch (JwtException | IllegalArgumentException ex) {
+            logger.error("Error de validación JWT: {}", ex.getMessage());
+            return false;
         }
-        return false;
+    }
+
+    public int getExpirationInSeconds() {
+        return jwtExpirationInSeconds;
     }
 }
