@@ -111,7 +111,10 @@ public class SecurityConfig {
         if (allowedOrigins != null && !allowedOrigins.isBlank()) {
             configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
         } else {
-            configuration.setAllowedOriginPatterns(List.of("https://tudominio.com")); // Cambia por tu dominio real
+            configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:4200",
+                "http://localhost:3000"
+            )); // Cambia por tu dominio real
         }
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
