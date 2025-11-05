@@ -29,10 +29,12 @@ public class RouteOptimizationService {
         Booking current = remaining.remove(0);
         ordered.add(current);
         while (!remaining.isEmpty()) {
+            final double latC = current.getLatitude() != null ? current.getLatitude() : 0;
+            final double lonC = current.getLongitude() != null ? current.getLongitude() : 0;
             Booking next = remaining.stream()
                 .min(Comparator.comparingDouble(b -> haversine(
-                        current.getLatitude() != null ? current.getLatitude() : 0,
-                        current.getLongitude() != null ? current.getLongitude() : 0,
+                        latC,
+                        lonC,
                         b.getLatitude() != null ? b.getLatitude() : 0,
                         b.getLongitude() != null ? b.getLongitude() : 0)))
                 .orElse(remaining.get(0));
@@ -43,4 +45,3 @@ public class RouteOptimizationService {
         return ordered;
     }
 }
-
