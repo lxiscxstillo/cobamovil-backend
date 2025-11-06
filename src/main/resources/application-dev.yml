@@ -26,6 +26,15 @@ app:
   jwt:
     secret: mySecretKey123456789012345678901234567890
     expiration: 86400 # 24 horas en segundos
+  coverage:
+    enabled: true
+    # Simple bounding box for coverage (example: Bogota approx)
+    minLat: 4.45
+    maxLat: 4.90
+    minLng: -74.30
+    maxLng: -73.90
+  whatsapp:
+    number: "+573001112233"
 
 logging:
   level:
