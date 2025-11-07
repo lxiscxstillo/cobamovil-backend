@@ -113,7 +113,8 @@ public class SecurityConfig {
         } else {
             configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:4200",
-                "https://cobamovil-frontend.vercel.app"
+                "https://cobamovil-frontend.vercel.app",
+                "https://*.vercel.app"
             ));
         }
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
