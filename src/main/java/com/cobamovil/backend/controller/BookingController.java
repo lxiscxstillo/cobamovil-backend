@@ -49,7 +49,8 @@ public class BookingController {
     public ResponseEntity<com.cobamovil.backend.dto.RoutePlanDTO> optimizedRoute(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                                                                                  @RequestParam(required = false) Long groomerId) {
         var ids = groomerId == null ? bookingService.optimizedIdsForDay(date) : bookingService.optimizedIdsForDayAndGroomer(date, groomerId);
-        return ResponseEntity.ok(new com.cobamovil.backend.dto.RoutePlanDTO(date.toString(), ids));
+        var etas = bookingService.etasForOrderedIds(ids);
+        return ResponseEntity.ok(new com.cobamovil.backend.dto.RoutePlanDTO(date.toString(), ids, etas));
     }
 
     @PutMapping("/admin/route")
@@ -57,6 +58,17 @@ public class BookingController {
     public ResponseEntity<Void> saveRoute(@RequestBody com.cobamovil.backend.dto.RoutePlanDTO dto) {
         bookingService.saveRoutePlan(LocalDate.parse(dto.getDate()), dto.getBookingIdsInOrder());
         return ResponseEntity.noContent().build();
+    }
+
+    // Start daily route for a groomer (generate plan + ETAs)
+    @PostMapping("/route/start")
+    @PreAuthorize("hasAuthority('ADMIN') or hasRole('ADMIN') or hasAuthority('GROOMER') or hasRole('GROOMER')")
+    public ResponseEntity<com.cobamovil.backend.dto.RoutePlanDTO> startRoute(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                                                                             @RequestParam(required = false) Long groomerId) {
+        var ids = groomerId == null ? bookingService.optimizedIdsForDay(date) : bookingService.optimizedIdsForDayAndGroomer(date, groomerId);
+        bookingService.saveRoutePlan(date, ids);
+        var etas = bookingService.etasForOrderedIds(ids);
+        return ResponseEntity.ok(new com.cobamovil.backend.dto.RoutePlanDTO(date.toString(), ids, etas));
     }
 
     @PutMapping("/{id}/status")

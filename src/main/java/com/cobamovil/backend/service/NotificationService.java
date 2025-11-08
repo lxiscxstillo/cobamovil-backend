@@ -5,6 +5,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -20,7 +23,10 @@ public class NotificationService {
     private final boolean enabled;
     private final RestTemplate http = new RestTemplate();
 
-    public NotificationService() {
+    private final JavaMailSender mailtrapSender;
+
+    public NotificationService(@org.springframework.beans.factory.annotation.Autowired(required = false) JavaMailSender mailtrapSender) {
+        this.mailtrapSender = mailtrapSender;
         this.enabled = accountSid != null && authToken != null && fromWhatsApp != null;
         if (enabled) {
             log.info("Twilio REST configured for WhatsApp from {}", fromWhatsApp);
@@ -120,9 +126,29 @@ public class NotificationService {
     }
 
     private void sendEmail(String to, String subject, String html) {
-        String apiKey = System.getenv("RESEND_API_KEY");
-        if (apiKey == null || apiKey.isBlank()) { log.warn("RESEND_API_KEY not set; skipping email."); return; }
         if (to == null || to.isBlank()) { log.warn("Recipient email missing; skipping email."); return; }
+        // 1) Try Mailtrap via SMTP (if configured)
+        try {
+            String host = System.getenv("MAILTRAP_HOST");
+            if (mailtrapSender != null && host != null) {
+                var mime = mailtrapSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(mime, "UTF-8");
+                String from = System.getenv().getOrDefault("MAILTRAP_FROM_EMAIL", "Coba Movil <no-reply@cobamovil.test>");
+                helper.setFrom(from);
+                helper.setTo(to);
+                helper.setSubject(subject);
+                helper.setText(html, true);
+                mailtrapSender.send(mime);
+                log.info("Email sent to {} via Mailtrap SMTP", to);
+                return;
+            }
+        } catch (Exception ex) {
+            log.error("Failed to send email via Mailtrap SMTP: {}", ex.getMessage());
+        }
+
+        // 2) Fallback to Resend API if available
+        String apiKey = System.getenv("RESEND_API_KEY");
+        if (apiKey == null || apiKey.isBlank()) { log.warn("No mail provider configured (Mailtrap/Resend)"); return; }
         try {
             String url = "https://api.resend.com/emails";
             HttpHeaders headers = new HttpHeaders();

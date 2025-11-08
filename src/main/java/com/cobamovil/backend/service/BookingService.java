@@ -27,6 +27,8 @@ public class BookingService {
     private final CoverageAreaService coverageAreaService;
     private final NotificationService notificationService;
     private final RoutePlanRepository routePlanRepository;
+    private final com.cobamovil.backend.repository.CutRecordRepository cutRecordRepository;
+    private final DistanceMatrixService distanceMatrixService;
 
     public BookingService(BookingRepository bookingRepository,
                           PetRepository petRepository,
@@ -34,7 +36,9 @@ public class BookingService {
                           RouteOptimizationService routeOptimizationService,
                           CoverageAreaService coverageAreaService,
                           NotificationService notificationService,
-                          RoutePlanRepository routePlanRepository) {
+                          RoutePlanRepository routePlanRepository,
+                          com.cobamovil.backend.repository.CutRecordRepository cutRecordRepository,
+                          DistanceMatrixService distanceMatrixService) {
         this.bookingRepository = bookingRepository;
         this.petRepository = petRepository;
         this.userRepository = userRepository;
@@ -42,6 +46,8 @@ public class BookingService {
         this.coverageAreaService = coverageAreaService;
         this.notificationService = notificationService;
         this.routePlanRepository = routePlanRepository;
+        this.cutRecordRepository = cutRecordRepository;
+        this.distanceMatrixService = distanceMatrixService;
     }
 
     @Transactional
@@ -126,6 +132,37 @@ public class BookingService {
                         b.getAssignedGroomer().getId().equals(groomerId)).toList();
         var ordered = routeOptimizationService.orderByNearest(list);
         return ordered.stream().map(Booking::getId).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<Integer> etasForOrderedIds(java.util.List<Long> ids) {
+        java.util.List<Integer> etas = new java.util.ArrayList<>();
+        int cum = 0;
+        if (ids == null || ids.size() < 2) { if (ids != null) for (int i=0;i<ids.size();i++) etas.add(cum); return etas; }
+        java.util.Map<Long, Booking> map = bookingRepository.findAllById(ids).stream().collect(java.util.stream.Collectors.toMap(Booking::getId, b -> b));
+        for (int i=0;i<ids.size();i++) {
+            if (i==0) { etas.add(cum); continue; }
+            Booking prev = map.get(ids.get(i-1));
+            Booking curr = map.get(ids.get(i));
+            Integer minutes = distanceMatrixService.durationMinutes(s(prev.getLatitude()), s(prev.getLongitude()), s(curr.getLatitude()), s(curr.getLongitude()));
+            if (minutes == null) minutes = approxMinutes(prev, curr);
+            cum += minutes;
+            etas.add(cum);
+        }
+        return etas;
+    }
+
+    private static double s(Double v) { return v == null ? 0.0 : v; }
+    private static int approxMinutes(Booking a, Booking b) {
+        double lat1 = s(a.getLatitude()), lon1 = s(a.getLongitude());
+        double lat2 = s(b.getLatitude()), lon2 = s(b.getLongitude());
+        // haversine distance in km
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double aa = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(Math.toRadians(lat1))*Math.cos(Math.toRadians(lat2))*Math.sin(dLon/2)*Math.sin(dLon/2);
+        double c = 2 * Math.atan2(Math.sqrt(aa), Math.sqrt(1-aa));
+        double km = 6371 * c;
+        return (int)Math.round((km / 30.0) * 60.0); // assume 30km/h avg
     }
 
     @Transactional

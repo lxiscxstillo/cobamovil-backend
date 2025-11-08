@@ -9,6 +9,10 @@ public class PetDTO {
     private Double weight;
     private String behavior;
     private String healthNotes;
+    private String vaccinations;
+    private String deworming;
+    private String medicalConditions;
+    private String lastGroomDate; // ISO yyyy-MM-dd
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -26,5 +30,12 @@ public class PetDTO {
     public void setBehavior(String behavior) { this.behavior = behavior; }
     public String getHealthNotes() { return healthNotes; }
     public void setHealthNotes(String healthNotes) { this.healthNotes = healthNotes; }
+    public String getVaccinations() { return vaccinations; }
+    public void setVaccinations(String vaccinations) { this.vaccinations = vaccinations; }
+    public String getDeworming() { return deworming; }
+    public void setDeworming(String deworming) { this.deworming = deworming; }
+    public String getMedicalConditions() { return medicalConditions; }
+    public void setMedicalConditions(String medicalConditions) { this.medicalConditions = medicalConditions; }
+    public String getLastGroomDate() { return lastGroomDate; }
+    public void setLastGroomDate(String lastGroomDate) { this.lastGroomDate = lastGroomDate; }
 }
-

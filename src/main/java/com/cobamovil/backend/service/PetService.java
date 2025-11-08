@@ -69,6 +69,12 @@ public class PetService {
         p.setWeight(dto.getWeight());
         p.setBehavior(dto.getBehavior());
         p.setHealthNotes(dto.getHealthNotes());
+        p.setVaccinations(dto.getVaccinations());
+        p.setDeworming(dto.getDeworming());
+        p.setMedicalConditions(dto.getMedicalConditions());
+        if (dto.getLastGroomDate() != null && !dto.getLastGroomDate().isBlank()) {
+            p.setLastGroomDate(java.time.LocalDate.parse(dto.getLastGroomDate()));
+        }
     }
 
     private PetDTO toDTO(Pet p) {
@@ -81,6 +87,10 @@ public class PetService {
         d.setWeight(p.getWeight());
         d.setBehavior(p.getBehavior());
         d.setHealthNotes(p.getHealthNotes());
+        d.setVaccinations(p.getVaccinations());
+        d.setDeworming(p.getDeworming());
+        d.setMedicalConditions(p.getMedicalConditions());
+        d.setLastGroomDate(p.getLastGroomDate() == null ? null : p.getLastGroomDate().toString());
         return d;
     }
 

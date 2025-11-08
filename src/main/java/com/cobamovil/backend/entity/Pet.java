@@ -45,6 +45,21 @@ public class Pet {
     @Size(max = 255)
     private String healthNotes; // allergies, conditions, etc.
 
+    @Lob
+    @Column(name = "vaccinations")
+    private String vaccinations; // vaccines info (names/dates)
+
+    @Lob
+    @Column(name = "deworming")
+    private String deworming; // deworming notes/dates
+
+    @Lob
+    @Column(name = "medical_conditions")
+    private String medicalConditions; // chronic conditions, allergies, etc.
+
+    @Column(name = "last_groom_date")
+    private java.time.LocalDate lastGroomDate; // last grooming date
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -71,7 +86,14 @@ public class Pet {
     public void setBehavior(String behavior) { this.behavior = behavior; }
     public String getHealthNotes() { return healthNotes; }
     public void setHealthNotes(String healthNotes) { this.healthNotes = healthNotes; }
+    public String getVaccinations() { return vaccinations; }
+    public void setVaccinations(String vaccinations) { this.vaccinations = vaccinations; }
+    public String getDeworming() { return deworming; }
+    public void setDeworming(String deworming) { this.deworming = deworming; }
+    public String getMedicalConditions() { return medicalConditions; }
+    public void setMedicalConditions(String medicalConditions) { this.medicalConditions = medicalConditions; }
+    public java.time.LocalDate getLastGroomDate() { return lastGroomDate; }
+    public void setLastGroomDate(java.time.LocalDate lastGroomDate) { this.lastGroomDate = lastGroomDate; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }
-
