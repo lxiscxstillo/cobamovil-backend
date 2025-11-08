@@ -18,6 +18,10 @@ public class UserUpdateDTO {
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&].*$", 
              message = "Password debe contener al menos una letra minúscula, una mayúscula, un número y un carácter especial")
     private String password;
+
+    @Size(max = 20, message = "Teléfono no puede exceder 20 caracteres")
+    @Pattern(regexp = "^$|^\\+?[0-9]{7,20}$", message = "Teléfono debe ser un número válido")
+    private String phone;
     
     // Constructor vacío
     public UserUpdateDTO() {}
@@ -31,4 +35,7 @@ public class UserUpdateDTO {
     
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 }

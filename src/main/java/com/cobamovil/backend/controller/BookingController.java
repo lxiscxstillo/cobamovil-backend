@@ -39,27 +39,28 @@ public class BookingController {
     }
 
     @GetMapping("/admin/day")
-    @PreAuthorize("hasAuthority('ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN') or hasRole('ADMIN') or hasAuthority('GROOMER') or hasRole('GROOMER')")
     public ResponseEntity<List<BookingResponseDTO>> listForDay(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return ResponseEntity.ok(bookingService.listForDay(date));
     }
 
     @GetMapping("/admin/route")
-    @PreAuthorize("hasAuthority('ADMIN') or hasRole('ADMIN')")
-    public ResponseEntity<com.cobamovil.backend.dto.RoutePlanDTO> optimizedRoute(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        var ids = bookingService.optimizedIdsForDay(date);
+    @PreAuthorize("hasAuthority('ADMIN') or hasRole('ADMIN') or hasAuthority('GROOMER') or hasRole('GROOMER')")
+    public ResponseEntity<com.cobamovil.backend.dto.RoutePlanDTO> optimizedRoute(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                                                                                 @RequestParam(required = false) Long groomerId) {
+        var ids = groomerId == null ? bookingService.optimizedIdsForDay(date) : bookingService.optimizedIdsForDayAndGroomer(date, groomerId);
         return ResponseEntity.ok(new com.cobamovil.backend.dto.RoutePlanDTO(date.toString(), ids));
     }
 
     @PutMapping("/admin/route")
-    @PreAuthorize("hasAuthority('ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN') or hasRole('ADMIN') or hasAuthority('GROOMER') or hasRole('GROOMER')")
     public ResponseEntity<Void> saveRoute(@RequestBody com.cobamovil.backend.dto.RoutePlanDTO dto) {
         bookingService.saveRoutePlan(LocalDate.parse(dto.getDate()), dto.getBookingIdsInOrder());
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasAuthority('ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN') or hasRole('ADMIN') or hasAuthority('GROOMER') or hasRole('GROOMER')")
     public ResponseEntity<BookingResponseDTO> updateStatus(@PathVariable Long id, @RequestParam BookingStatus status) {
         return ResponseEntity.ok(bookingService.updateStatus(id, status));
     }

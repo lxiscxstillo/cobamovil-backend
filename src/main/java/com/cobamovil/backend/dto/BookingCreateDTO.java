@@ -12,6 +12,7 @@ public class BookingCreateDTO {
     private Long petId;
     @NotNull
     private ServiceType serviceType;
+    private Long groomerId; // optional selected groomer
     @NotNull @Future
     private LocalDate date;
     @NotNull
@@ -37,5 +38,6 @@ public class BookingCreateDTO {
     public void setLongitude(Double longitude) { this.longitude = longitude; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+    public Long getGroomerId() { return groomerId; }
+    public void setGroomerId(Long groomerId) { this.groomerId = groomerId; }
 }
-

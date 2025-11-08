@@ -23,15 +23,21 @@ public class RegisterRequestDTO {
         message = "Password debe contener al menos una letra minúscula, una mayúscula, un número y un carácter especial"
     )
     private String password;
+
+    @Size(max = 20, message = "Teléfono no puede exceder 20 caracteres")
+    // E.164 opcional: + prefijo y dígitos, o vacío
+    @Pattern(regexp = "^$|^\\+?[0-9]{7,20}$", message = "Teléfono debe ser un número válido")
+    private String phone;
     
     // Constructor vacío
     public RegisterRequestDTO() {}
     
     // Constructor completo
-    public RegisterRequestDTO(String username, String email, String password) {
+    public RegisterRequestDTO(String username, String email, String password, String phone) {
         this.username = username;
         this.email = email;
         this.password = password;
+        this.phone = phone;
     }
     
     // Getters y Setters
@@ -43,4 +49,7 @@ public class RegisterRequestDTO {
     
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 }

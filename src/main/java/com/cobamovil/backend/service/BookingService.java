@@ -71,8 +71,22 @@ public class BookingService {
         booking.setLongitude(dto.getLongitude());
         booking.setNotes(dto.getNotes());
         booking.setStatus(BookingStatus.PENDING);
+        // Assign a groomer: use selection when provided; fallback to first available
+        if (dto.getGroomerId() != null) {
+            User g = userRepository.findById(dto.getGroomerId()).orElseThrow(() -> new EntityNotFoundException("Groomer not found"));
+            if (!"GROOMER".equalsIgnoreCase(g.getRole())) throw new IllegalArgumentException("Selected user is not a groomer");
+            booking.setAssignedGroomer(g);
+            notificationService.notifyBookingEvent(g, "BOOKING_CREATED", "WHATSAPP");
+        } else {
+            var groomers = userRepository.findByRole("GROOMER");
+            if (groomers != null && !groomers.isEmpty()) {
+                booking.setAssignedGroomer(groomers.get(0));
+                notificationService.notifyBookingEvent(groomers.get(0), "BOOKING_CREATED", "WHATSAPP");
+            }
+        }
         Booking saved = bookingRepository.save(booking);
-        notificationService.notifyBookingEvent(user, "BOOKING_CREATED", "INTERNAL");
+        // Optionally notify customer that request is pending
+        notificationService.notifyBookingEvent(user, "BOOKING_CREATED", "EMAIL");
         return toResponse(saved);
     }
 
@@ -105,6 +119,15 @@ public class BookingService {
         return ordered.stream().map(Booking::getId).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<Long> optimizedIdsForDayAndGroomer(LocalDate date, Long groomerId) {
+        var list = bookingRepository.findByDateAndStatus(date, BookingStatus.APPROVED)
+                .stream().filter(b -> b.getAssignedGroomer() != null &&
+                        b.getAssignedGroomer().getId().equals(groomerId)).toList();
+        var ordered = routeOptimizationService.orderByNearest(list);
+        return ordered.stream().map(Booking::getId).collect(Collectors.toList());
+    }
+
     @Transactional
     public BookingResponseDTO updateStatus(Long id, BookingStatus status) {
         Booking booking = bookingRepository.findById(id)
@@ -116,7 +139,20 @@ public class BookingService {
             case APPROVED -> notificationService.notifyBookingEvent(user, "BOOKING_APPROVED", "WHATSAPP");
             case REJECTED -> notificationService.notifyBookingEvent(user, "BOOKING_REJECTED", "WHATSAPP");
             case ON_ROUTE -> notificationService.notifyBookingEvent(user, "BOOKING_ON_ROUTE", "WHATSAPP");
-            case COMPLETED -> notificationService.notifyBookingEvent(user, "BOOKING_COMPLETED", "EMAIL");
+            case COMPLETED -> {
+                notificationService.notifyBookingEvent(user, "BOOKING_COMPLETED", "EMAIL");
+                // Create a cut record for groomer
+                if (saved.getAssignedGroomer() != null) {
+                    com.cobamovil.backend.entity.CutRecord rec = new com.cobamovil.backend.entity.CutRecord();
+                    rec.setGroomer(saved.getAssignedGroomer());
+                    rec.setServiceType(saved.getServiceType());
+                    rec.setPetName(saved.getPet().getName());
+                    rec.setDate(saved.getDate());
+                    rec.setTime(saved.getTime());
+                    rec.setNotes(saved.getNotes());
+                    cutRecordRepository.save(rec);
+                }
+            }
             default -> {}
         }
         return toResponse(saved);

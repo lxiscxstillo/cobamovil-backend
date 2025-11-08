@@ -32,4 +32,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Buscar usuarios por email que contenga el texto (case insensitive)
     @Query("SELECT u FROM User u WHERE LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<User> findByEmailContainingIgnoreCase(@Param("search") String search, Pageable pageable);
+
+    // Find users by role
+    @Query("SELECT u FROM User u WHERE u.role = :role")
+    java.util.List<User> findByRole(@Param("role") String role);
 }

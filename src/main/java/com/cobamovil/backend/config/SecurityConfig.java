@@ -92,6 +92,7 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui.html").permitAll()
                 .requestMatchers("/swagger-resources/**").permitAll()
                 .requestMatchers("/webjars/**").permitAll()
+                .requestMatchers("/api/config/**").permitAll()
                 // Endpoints que requieren autenticación
                 .requestMatchers("/api/users/**").authenticated()
                 // Todos los demás endpoints requieren autenticación
@@ -128,3 +129,4 @@ public class SecurityConfig {
         return source;
     }
 }
+

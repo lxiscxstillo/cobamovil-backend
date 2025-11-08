@@ -48,6 +48,11 @@ public class Booking {
     @Column(nullable = false, length = 20)
     private BookingStatus status = BookingStatus.PENDING;
 
+    // Assigned groomer (peluquero). Nullable until assignment.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_groomer_id")
+    private User assignedGroomer;
+
     @Column(length = 500)
     private String notes;
 
@@ -78,9 +83,10 @@ public class Booking {
     public void setLongitude(Double longitude) { this.longitude = longitude; }
     public BookingStatus getStatus() { return status; }
     public void setStatus(BookingStatus status) { this.status = status; }
+    public User getAssignedGroomer() { return assignedGroomer; }
+    public void setAssignedGroomer(User assignedGroomer) { this.assignedGroomer = assignedGroomer; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }
-

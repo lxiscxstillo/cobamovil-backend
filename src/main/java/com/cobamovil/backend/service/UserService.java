@@ -99,6 +99,9 @@ public class UserService {
         if (userUpdateDTO.getPassword() != null && !userUpdateDTO.getPassword().trim().isEmpty()) {
             user.setPassword(passwordEncoder.encode(userUpdateDTO.getPassword()));
         }
+        if (userUpdateDTO.getPhone() != null) {
+            user.setPhone(userUpdateDTO.getPhone());
+        }
         
         User updatedUser = userRepository.save(user);
         return convertToResponseDTO(updatedUser);
@@ -124,6 +127,7 @@ public class UserService {
             user.getId(),
             user.getUsername(),
             user.getEmail(),
+            user.getPhone(),
             user.getRole(),
             user.isEnabled(),
             user.getCreatedAt(),

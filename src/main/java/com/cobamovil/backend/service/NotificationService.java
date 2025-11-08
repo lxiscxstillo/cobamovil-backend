@@ -1,42 +1,141 @@
 package com.cobamovil.backend.service;
 
-import com.cobamovil.backend.entity.NotificationLog;
-import com.cobamovil.backend.entity.User;
-import com.cobamovil.backend.repository.NotificationLogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class NotificationService {
     private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
-    private final NotificationLogRepository notificationLogRepository;
+    private final String accountSid = System.getenv("TWILIO_ACCOUNT_SID");
+    private final String authToken = System.getenv("TWILIO_AUTH_TOKEN");
+    private final String fromWhatsApp = System.getenv("TWILIO_WHATSAPP_FROM"); // e.g., +1415...
+    private final boolean enabled;
+    private final RestTemplate http = new RestTemplate();
 
-    @Value("${app.whatsapp.number:}")
-    private String whatsappNumber;
-
-    public NotificationService(NotificationLogRepository notificationLogRepository) {
-        this.notificationLogRepository = notificationLogRepository;
+    public NotificationService() {
+        this.enabled = accountSid != null && authToken != null && fromWhatsApp != null;
+        if (enabled) {
+            log.info("Twilio REST configured for WhatsApp from {}", fromWhatsApp);
+        } else {
+            log.warn("Twilio env vars missing. WhatsApp notifications disabled.");
+        }
     }
 
-    public void notifyBookingEvent(User user, String event, String preferredChannel) {
-        // Stub: log and persist a record. Integrations can be added behind adapters.
-        String channel = preferredChannel != null ? preferredChannel : "INTERNAL";
-        String destination = switch (channel) {
-            case "WHATSAPP" -> whatsappNumber;
-            case "EMAIL" -> user.getEmail();
-            default -> user.getUsername();
+    public void sendWhatsApp(String toE164, String body) {
+        if (!enabled) { log.debug("Twilio disabled, skipping WhatsApp message to {}", toE164); return; }
+        try {
+            String url = String.format("https://api.twilio.com/2010-04-01/Accounts/%s/Messages.json", accountSid);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBasicAuth(accountSid, authToken);
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+            form.add("To", "whatsapp:" + toE164);
+            form.add("From", "whatsapp:" + fromWhatsApp);
+            form.add("Body", body);
+            HttpEntity<MultiValueMap<String, String>> req = new HttpEntity<>(form, headers);
+            http.postForEntity(url, req, String.class);
+            log.info("WhatsApp message sent to {}", toE164);
+        } catch (Exception ex) {
+            log.error("Failed to send WhatsApp message: {}", ex.getMessage());
+        }
+    }
+
+    /**
+     * High-level notification entrypoint used across the app.
+     * channel: "WHATSAPP" | "EMAIL" | "INTERNAL" (no-op)
+     */
+    public void notifyBookingEvent(com.cobamovil.backend.entity.User user, String event, String channel) {
+        try {
+            switch (channel == null ? "" : channel.toUpperCase()) {
+                case "WHATSAPP" -> {
+                    String to = (user != null && user.getPhone() != null && !user.getPhone().isBlank())
+                            ? user.getPhone()
+                            : System.getenv("TWILIO_TEST_TO");
+                    if (to == null || to.isBlank()) {
+                        log.warn("No phone or TWILIO_TEST_TO set; skipping WhatsApp notification for event {}", event);
+                        return;
+                    }
+                    String body = switch (event) {
+                        case "BOOKING_CREATED" -> "Tu reserva fue recibida y está pendiente de aprobación.";
+                        case "BOOKING_RESCHEDULED" -> "Tu reserva fue reprogramada.";
+                        case "BOOKING_CANCELED" -> "Tu reserva fue cancelada.";
+                        case "BOOKING_APPROVED" -> "¡Tu reserva fue aprobada!";
+                        case "BOOKING_REJECTED" -> "Lo sentimos, aún no llegamos a tu zona.";
+                        case "BOOKING_ON_ROUTE" -> "Estamos en camino.";
+                        case "BOOKING_COMPLETED" -> "Servicio completado. ¡Gracias!";
+                        default -> "Actualización de tu reserva.";
+                    };
+                    sendWhatsApp(to, body);
+                }
+                case "EMAIL" -> {
+                    sendEmail(
+                            user != null ? user.getEmail() : null,
+                            subjectFor(event),
+                            htmlFor(event)
+                    );
+                }
+                default -> {
+                    // INTERNAL or unknown: no-op
+                    log.debug("INTERNAL notification for event {}", event);
+                }
+            }
+        } catch (Exception ex) {
+            log.error("Notification dispatch failed: {}", ex.getMessage());
+        }
+    }
+
+    private String subjectFor(String event) {
+        return switch (event) {
+            case "BOOKING_CREATED" -> "Reserva recibida";
+            case "BOOKING_APPROVED" -> "Reserva aprobada";
+            case "BOOKING_REJECTED" -> "Reserva rechazada";
+            case "BOOKING_ON_ROUTE" -> "Estamos en camino";
+            case "BOOKING_COMPLETED" -> "Servicio completado";
+            case "BOOKING_RESCHEDULED" -> "Reserva reprogramada";
+            case "BOOKING_CANCELED" -> "Reserva cancelada";
+            default -> "Actualización de tu reserva";
         };
-        log.info("Notify {} via {} to {}", event, channel, destination);
-        NotificationLog nl = new NotificationLog();
-        nl.setUser(user);
-        nl.setChannel(channel);
-        nl.setEvent(event);
-        nl.setDestination(destination);
-        nl.setStatus("SENT");
-        notificationLogRepository.save(nl);
+    }
+
+    private String htmlFor(String event) {
+        String body = switch (event) {
+            case "BOOKING_CREATED" -> "Tu reserva fue recibida y está pendiente de aprobación.";
+            case "BOOKING_APPROVED" -> "¡Tu reserva fue aprobada!";
+            case "BOOKING_REJECTED" -> "Lo sentimos, aún no llegamos a tu zona.";
+            case "BOOKING_ON_ROUTE" -> "Estamos en camino.";
+            case "BOOKING_COMPLETED" -> "Servicio completado. ¡Gracias!";
+            case "BOOKING_RESCHEDULED" -> "Tu reserva fue reprogramada.";
+            case "BOOKING_CANCELED" -> "Tu reserva fue cancelada.";
+            default -> "Actualización de tu reserva.";
+        };
+        return "<p>" + body + "</p>";
+    }
+
+    private void sendEmail(String to, String subject, String html) {
+        String apiKey = System.getenv("RESEND_API_KEY");
+        if (apiKey == null || apiKey.isBlank()) { log.warn("RESEND_API_KEY not set; skipping email."); return; }
+        if (to == null || to.isBlank()) { log.warn("Recipient email missing; skipping email."); return; }
+        try {
+            String url = "https://api.resend.com/emails";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(apiKey);
+            String from = System.getenv().getOrDefault("RESEND_FROM_EMAIL", "Coba Movil <notifications@resend.dev>");
+            String payload = String.format("{\"from\":\"%s\",\"to\":[\"%s\"],\"subject\":\"%s\",\"html\":\"%s\"}",
+                    from.replace("\"","'"), to.replace("\"","'"), subject.replace("\"","'"), html.replace("\"","'"));
+            HttpEntity<String> req = new HttpEntity<>(payload, headers);
+            http.postForEntity(url, req, String.class);
+            log.info("Email sent to {} via Resend", to);
+        } catch (Exception ex) {
+            log.error("Failed to send email via Resend: {}", ex.getMessage());
+        }
     }
 }
-
