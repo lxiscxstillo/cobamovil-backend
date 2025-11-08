@@ -16,7 +16,11 @@ public class FlywayRepairConfig {
 
     @Bean
     public FlywayMigrationStrategy flywayMigrationStrategy() {
-        return Flyway::repairAndMigrate;
+        return (Flyway flyway) -> {
+            // First fix checksums and history inconsistencies
+            flyway.repair();
+            // Then run the normal migration
+            flyway.migrate();
+        };
     }
 }
-
