@@ -84,9 +84,8 @@ public class AuthService {
             registerRequest.getEmail(),
             passwordEncoder.encode(registerRequest.getPassword())
         );
-        if (registerRequest.getPhone() != null && !registerRequest.getPhone().isBlank()) {
-            user.setPhone(registerRequest.getPhone());
-        }
+        // Phone is now mandatory (validated at DTO level)
+        user.setPhone(registerRequest.getPhone());
         User savedUser = userRepository.save(user);
 
         // Autenticar con username y password plano para generar token
