@@ -45,16 +45,13 @@ public class Pet {
     @Size(max = 255)
     private String healthNotes; // allergies, conditions, etc.
 
-    @Lob
-    @Column(name = "vaccinations")
+    @Column(name = "vaccinations", columnDefinition = "TEXT")
     private String vaccinations; // vaccines info (names/dates)
 
-    @Lob
-    @Column(name = "deworming")
+    @Column(name = "deworming", columnDefinition = "TEXT")
     private String deworming; // deworming notes/dates
 
-    @Lob
-    @Column(name = "medical_conditions")
+    @Column(name = "medical_conditions", columnDefinition = "TEXT")
     private String medicalConditions; // chronic conditions, allergies, etc.
 
     @Column(name = "last_groom_date")
