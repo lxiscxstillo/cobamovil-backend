@@ -23,8 +23,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // Permitir login con "username" o con "email" usando el mismo campo de entrada
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
+                .orElseGet(() -> userRepository.findByEmail(username)
+                        .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username)));
 
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())

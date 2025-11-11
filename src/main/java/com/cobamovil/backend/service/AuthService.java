@@ -50,8 +50,10 @@ public class AuthService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = tokenProvider.generateToken(authentication);
 
+            // Buscar el usuario por username o, si no existe, por email (soporta ambos tipos de login)
             User user = userRepository.findByUsername(loginRequest.getUsername())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseGet(() -> userRepository.findByEmail(loginRequest.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado")));
 
             LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(tokenProvider.getExpirationInSeconds());
 
