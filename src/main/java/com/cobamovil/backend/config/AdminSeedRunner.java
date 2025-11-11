@@ -25,8 +25,21 @@ public class AdminSeedRunner {
                 return; // do nothing unless explicitly enabled
             }
 
-            createIfMissing(users, encoder, "admin", "admin@cobamovil.com", "Admin123!");
-            createIfMissing(users, encoder, "admin2", "admin2@cobamovil.com", "Admin123!");
+            String defaultPwd = System.getenv().getOrDefault("APP_ADMIN_PASSWORD", "Admin123!");
+            createIfMissing(users, encoder, "admin", "admin@cobamovil.com", defaultPwd);
+            createIfMissing(users, encoder, "admin2", "admin2@cobamovil.com", defaultPwd);
+
+            // Optional: force-reset password(s) if requested
+            String resetFlag = System.getenv("APP_RESET_ADMIN");
+            if (resetFlag != null && resetFlag.equalsIgnoreCase("true")) {
+                String target = System.getenv("APP_RESET_USERNAME"); // optional single user
+                if (target != null && !target.isBlank()) {
+                    resetIfPresent(users, encoder, target.trim(), defaultPwd);
+                } else {
+                    resetIfPresent(users, encoder, "admin", defaultPwd);
+                    resetIfPresent(users, encoder, "admin2", defaultPwd);
+                }
+            }
         };
     }
 
@@ -45,5 +58,18 @@ public class AdminSeedRunner {
             log.info("Admin user '{}' already exists; skipping seed", username);
         }
     }
-}
 
+    private void resetIfPresent(UserRepository users, PasswordEncoder encoder,
+                                String username, String rawPassword) {
+        users.findByUsername(username).ifPresent(u -> {
+            u.setPassword(encoder.encode(rawPassword));
+            u.setRole("ADMIN");
+            u.setAccountNonExpired(true);
+            u.setAccountNonLocked(true);
+            u.setCredentialsNonExpired(true);
+            u.setEnabled(true);
+            users.save(u);
+            log.info("Reset password and role for admin user '{}'", username);
+        });
+    }
+}
