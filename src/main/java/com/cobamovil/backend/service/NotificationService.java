@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -70,14 +69,14 @@ public class NotificationService {
                         return;
                     }
                     String body = switch (event) {
-                        case "BOOKING_CREATED" -> "Tu reserva fue recibida y está pendiente de aprobación.";
+                        case "BOOKING_CREATED" -> "Tu reserva fue recibida y est\u00E1 pendiente de aprobaci\u00F3n.";
                         case "BOOKING_RESCHEDULED" -> "Tu reserva fue reprogramada.";
                         case "BOOKING_CANCELED" -> "Tu reserva fue cancelada.";
-                        case "BOOKING_APPROVED" -> "¡Tu reserva fue aprobada!";
-                        case "BOOKING_REJECTED" -> "Lo sentimos, aún no llegamos a tu zona.";
+                        case "BOOKING_APPROVED" -> "\u00A1Tu reserva fue aprobada!";
+                        case "BOOKING_REJECTED" -> "Lo sentimos, a\u00FAn no llegamos a tu zona.";
                         case "BOOKING_ON_ROUTE" -> "Estamos en camino.";
-                        case "BOOKING_COMPLETED" -> "Servicio completado. ¡Gracias!";
-                        default -> "Actualización de tu reserva.";
+                        case "BOOKING_COMPLETED" -> "Servicio completado. \u00A1Gracias!";
+                        default -> "Actualizaci\u00F3n de tu reserva.";
                     };
                     sendWhatsApp(to, body);
                 }
@@ -107,20 +106,20 @@ public class NotificationService {
             case "BOOKING_COMPLETED" -> "Servicio completado";
             case "BOOKING_RESCHEDULED" -> "Reserva reprogramada";
             case "BOOKING_CANCELED" -> "Reserva cancelada";
-            default -> "Actualización de tu reserva";
+            default -> "Actualizaci\u00F3n de tu reserva";
         };
     }
 
     private String htmlFor(String event) {
         String body = switch (event) {
-            case "BOOKING_CREATED" -> "Tu reserva fue recibida y está pendiente de aprobación.";
-            case "BOOKING_APPROVED" -> "¡Tu reserva fue aprobada!";
-            case "BOOKING_REJECTED" -> "Lo sentimos, aún no llegamos a tu zona.";
+            case "BOOKING_CREATED" -> "Tu reserva fue recibida y est\u00E1 pendiente de aprobaci\u00F3n.";
+            case "BOOKING_APPROVED" -> "\u00A1Tu reserva fue aprobada!";
+            case "BOOKING_REJECTED" -> "Lo sentimos, a\u00FAn no llegamos a tu zona.";
             case "BOOKING_ON_ROUTE" -> "Estamos en camino.";
-            case "BOOKING_COMPLETED" -> "Servicio completado. ¡Gracias!";
+            case "BOOKING_COMPLETED" -> "Servicio completado. \u00A1Gracias!";
             case "BOOKING_RESCHEDULED" -> "Tu reserva fue reprogramada.";
             case "BOOKING_CANCELED" -> "Tu reserva fue cancelada.";
-            default -> "Actualización de tu reserva.";
+            default -> "Actualizaci\u00F3n de tu reserva.";
         };
         return "<p>" + body + "</p>";
     }
@@ -133,7 +132,7 @@ public class NotificationService {
             if (mailtrapSender != null && host != null) {
                 var mime = mailtrapSender.createMimeMessage();
                 MimeMessageHelper helper = new MimeMessageHelper(mime, "UTF-8");
-                String from = System.getenv().getOrDefault("MAILTRAP_FROM_EMAIL", "Coba Movil <no-reply@cobamovil.test>");
+                String from = System.getenv().getOrDefault("MAILTRAP_FROM_EMAIL", "Coba M\u00F3vil <no-reply@cobamovil.test>");
                 helper.setFrom(from);
                 helper.setTo(to);
                 helper.setSubject(subject);
@@ -154,7 +153,7 @@ public class NotificationService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(apiKey);
-            String from = System.getenv().getOrDefault("RESEND_FROM_EMAIL", "Coba Movil <notifications@resend.dev>");
+            String from = System.getenv().getOrDefault("RESEND_FROM_EMAIL", "Coba M\u00F3vil <notifications@resend.dev>");
             String payload = String.format("{\"from\":\"%s\",\"to\":[\"%s\"],\"subject\":\"%s\",\"html\":\"%s\"}",
                     from.replace("\"","'"), to.replace("\"","'"), subject.replace("\"","'"), html.replace("\"","'"));
             HttpEntity<String> req = new HttpEntity<>(payload, headers);
@@ -165,3 +164,4 @@ public class NotificationService {
         }
     }
 }
+
