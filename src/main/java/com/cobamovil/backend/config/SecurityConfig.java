@@ -108,16 +108,23 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        // Start with safe defaults that always include local dev and the Vercel domain
+        List<String> originPatterns = new java.util.ArrayList<>(List.of(
+            "http://localhost:4200",
+            "https://cobamovil-frontend.vercel.app",
+            "https://*.vercel.app"
+        ));
+        // If ALLOWED_ORIGINS is present, merge (do not replace) so defaults remain
         String allowedOrigins = System.getenv("ALLOWED_ORIGINS");
         if (allowedOrigins != null && !allowedOrigins.isBlank()) {
-            configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
-        } else {
-            configuration.setAllowedOriginPatterns(List.of(
-                "http://localhost:4200",
-                "https://cobamovil-frontend.vercel.app",
-                "https://*.vercel.app"
-            ));
+            for (String o : allowedOrigins.split(",")) {
+                String trimmed = o.trim();
+                if (!trimmed.isEmpty() && !originPatterns.contains(trimmed)) {
+                    originPatterns.add(trimmed);
+                }
+            }
         }
+        configuration.setAllowedOriginPatterns(originPatterns);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
         configuration.setAllowCredentials(true);
