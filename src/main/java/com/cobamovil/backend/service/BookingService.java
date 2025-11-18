@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -207,6 +208,8 @@ public class BookingService {
         if (serviceType != null) b.setServiceType(serviceType);
         b.setDate(date);
         b.setTime(time);
+        // After rescheduling, booking should go back to pending approval
+        b.setStatus(BookingStatus.PENDING);
         Booking saved = bookingRepository.save(b);
         notificationService.notifyBookingEvent(saved.getCustomer(), "BOOKING_RESCHEDULED", "EMAIL");
         return toResponse(saved);
@@ -233,6 +236,37 @@ public class BookingService {
         String csv = idsInOrder == null ? "" : idsInOrder.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
         plan.setOrderCsv(csv);
         routePlanRepository.save(plan);
+    }
+
+    @Transactional(readOnly = true)
+    public com.cobamovil.backend.dto.AvailabilityResponseDTO checkAvailability(LocalDate date, LocalTime time, ServiceType serviceType) {
+        com.cobamovil.backend.dto.AvailabilityResponseDTO dto = new com.cobamovil.backend.dto.AvailabilityResponseDTO();
+        // Date in the past
+        if (date.isBefore(LocalDate.now())) {
+            dto.setAvailable(false);
+            dto.setMessage("No puedes seleccionar una fecha anterior a la actual.");
+            dto.setGroomerIds(java.util.Collections.emptyList());
+            return dto;
+        }
+        try {
+            validateAvailability(date, time, serviceType);
+        } catch (IllegalStateException ex) {
+            dto.setAvailable(false);
+            dto.setMessage("Ese horario ya ha sido reservado. Por favor, elige otro.");
+            dto.setGroomerIds(java.util.Collections.emptyList());
+            return dto;
+        }
+        var groomers = userRepository.findByRole("GROOMER");
+        if (groomers == null || groomers.isEmpty()) {
+            dto.setAvailable(false);
+            dto.setMessage("No hay peluqueros disponibles en ese horario. Intenta otra fecha u hora.");
+            dto.setGroomerIds(java.util.Collections.emptyList());
+            return dto;
+        }
+        dto.setAvailable(true);
+        dto.setMessage("Horario disponible.");
+        dto.setGroomerIds(groomers.stream().map(User::getId).collect(java.util.stream.Collectors.toList()));
+        return dto;
     }
 
     private void validateAvailability(LocalDate date, java.time.LocalTime time, ServiceType serviceType) {

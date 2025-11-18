@@ -2,6 +2,7 @@ package com.cobamovil.backend.controller;
 
 import com.cobamovil.backend.dto.BookingCreateDTO;
 import com.cobamovil.backend.dto.BookingResponseDTO;
+import com.cobamovil.backend.dto.AvailabilityResponseDTO;
 import com.cobamovil.backend.entity.BookingStatus;
 import com.cobamovil.backend.entity.ServiceType;
 import com.cobamovil.backend.service.BookingService;
@@ -90,5 +91,14 @@ public class BookingController {
     public ResponseEntity<Void> cancel(Authentication auth, @PathVariable Long id) {
         bookingService.cancel(id, auth.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/availability")
+    public ResponseEntity<AvailabilityResponseDTO> checkAvailability(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime time,
+            @RequestParam ServiceType serviceType
+    ) {
+        return ResponseEntity.ok(bookingService.checkAvailability(date, time, serviceType));
     }
 }
