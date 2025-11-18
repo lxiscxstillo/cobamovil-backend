@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -241,10 +242,12 @@ public class BookingService {
     @Transactional(readOnly = true)
     public com.cobamovil.backend.dto.AvailabilityResponseDTO checkAvailability(LocalDate date, LocalTime time, ServiceType serviceType) {
         com.cobamovil.backend.dto.AvailabilityResponseDTO dto = new com.cobamovil.backend.dto.AvailabilityResponseDTO();
-        // Date in the past
-        if (date.isBefore(LocalDate.now())) {
+        // Date/time in the past
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime candidate = LocalDateTime.of(date, time);
+        if (candidate.isBefore(now)) {
             dto.setAvailable(false);
-            dto.setMessage("No puedes seleccionar una fecha anterior a la actual.");
+            dto.setMessage("No puedes seleccionar una hora pasada del día de hoy.");
             dto.setGroomerIds(java.util.Collections.emptyList());
             return dto;
         }
