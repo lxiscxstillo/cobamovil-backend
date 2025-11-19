@@ -221,10 +221,20 @@ public class BookingService {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User not found"));
         Booking b = bookingRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Booking not found"));
         if (!b.getCustomer().getId().equals(user.getId())) throw new IllegalArgumentException("Unauthorized");
+        // Regla nueva: mientras la cita esté pendiente, siempre se puede cancelar.
+        // Si ya fue aceptada o está en otro estado, no se permite cancelarla.
+        if (b.getStatus() != BookingStatus.PENDING) {
+            // userMessage: el usuario entiende claramente por qué no puede cancelar
+            throw new IllegalStateException("Esta cita ya fue aceptada por el peluquero y no puede modificarse.");
+        }
+        b.setStatus(BookingStatus.REJECTED);
+        bookingRepository.save(b);
+        notificationService.notifyBookingEvent(b.getCustomer(), "BOOKING_CANCELED", "WHATSAPP");
+        return;
         // Allow cancel only before 12 hours of appointment
         java.time.LocalDateTime appointment = java.time.LocalDateTime.of(b.getDate(), b.getTime());
         if (java.time.Duration.between(java.time.LocalDateTime.now(), appointment).toHours() < 12) {
-            // userMessage: el usuario entiende claramente por qué no puede cancelar
+            // userMessage: el usuario entiende claramente por quÃ© no puede cancelar
             throw new IllegalStateException("Solo puedes cancelar una cita hasta 12 horas antes de la hora programada.");
         }
         b.setStatus(BookingStatus.REJECTED);
@@ -248,7 +258,7 @@ public class BookingService {
         LocalDateTime candidate = LocalDateTime.of(date, time);
         if (candidate.isBefore(now)) {
             dto.setAvailable(false);
-            dto.setMessage("La hora que elegiste ya pasó. Por favor selecciona otra hora disponible.");
+            dto.setMessage("La hora que elegiste ya pasÃ³. Por favor selecciona otra hora disponible.");
             dto.setGroomerIds(java.util.Collections.emptyList());
             return dto;
         }
@@ -309,4 +319,5 @@ public class BookingService {
         return r;
     }
 }
+
 
