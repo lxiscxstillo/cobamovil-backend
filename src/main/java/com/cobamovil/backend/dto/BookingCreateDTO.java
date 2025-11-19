@@ -2,6 +2,7 @@ package com.cobamovil.backend.dto;
 
 import com.cobamovil.backend.entity.ServiceType;
 import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
@@ -13,7 +14,8 @@ public class BookingCreateDTO {
     @NotNull
     private ServiceType serviceType;
     private Long groomerId; // optional selected groomer
-    @NotNull @Future
+    // FIX: permitir reservas para el día de hoy (si la hora aún no ha pasado)
+    @NotNull @FutureOrPresent
     private LocalDate date;
     @NotNull
     private LocalTime time;
