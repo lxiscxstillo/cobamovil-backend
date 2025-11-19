@@ -224,7 +224,8 @@ public class BookingService {
         // Allow cancel only before 12 hours of appointment
         java.time.LocalDateTime appointment = java.time.LocalDateTime.of(b.getDate(), b.getTime());
         if (java.time.Duration.between(java.time.LocalDateTime.now(), appointment).toHours() < 12) {
-            throw new IllegalStateException("Too late to cancel");
+            // userMessage: el usuario entiende claramente por qué no puede cancelar
+            throw new IllegalStateException("Solo puedes cancelar una cita hasta 12 horas antes de la hora programada.");
         }
         b.setStatus(BookingStatus.REJECTED);
         bookingRepository.save(b);
@@ -247,7 +248,7 @@ public class BookingService {
         LocalDateTime candidate = LocalDateTime.of(date, time);
         if (candidate.isBefore(now)) {
             dto.setAvailable(false);
-            dto.setMessage("No puedes seleccionar una hora pasada del día de hoy.");
+            dto.setMessage("La hora que elegiste ya pasó. Por favor selecciona otra hora disponible.");
             dto.setGroomerIds(java.util.Collections.emptyList());
             return dto;
         }
@@ -308,3 +309,4 @@ public class BookingService {
         return r;
     }
 }
+
