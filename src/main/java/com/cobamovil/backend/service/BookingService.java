@@ -108,6 +108,19 @@ public class BookingService {
 
     @Transactional(readOnly = true)
     public List<BookingResponseDTO> listForDay(LocalDate date) {
+        // Si el usuario autenticado es un peluquero, solo devolvemos las reservas asignadas a él.
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            String username = auth.getName();
+            User user = userRepository.findByUsername(username).orElse(null);
+            if (user != null && "GROOMER".equalsIgnoreCase(user.getRole())) {
+                return bookingRepository.findByDate(date).stream()
+                        .filter(b -> b.getAssignedGroomer() != null && b.getAssignedGroomer().getId().equals(user.getId()))
+                        .map(this::toResponse)
+                        .collect(Collectors.toList());
+            }
+        }
+        // Para ADMIN u otros roles, devolvemos todas las reservas del día.
         return bookingRepository.findByDate(date).stream().map(this::toResponse).collect(Collectors.toList());
     }
 
@@ -171,6 +184,17 @@ public class BookingService {
     public BookingResponseDTO updateStatus(Long id, BookingStatus status) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Booking not found"));
+        // Si el usuario autenticado es un peluquero, solo puede modificar reservas asignadas a �l.
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            String username = auth.getName();
+            User user = userRepository.findByUsername(username).orElse(null);
+            if (user != null && "GROOMER".equalsIgnoreCase(user.getRole())) {
+                if (booking.getAssignedGroomer() == null || !booking.getAssignedGroomer().getId().equals(user.getId())) {
+                    throw new IllegalStateException("No puedes modificar reservas que no est�n asignadas a tu perfil de peluquero.");
+                }
+            }
+        }
         booking.setStatus(status);
         Booking saved = bookingRepository.save(booking);
         User user = saved.getCustomer();
