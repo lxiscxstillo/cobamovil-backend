@@ -75,6 +75,17 @@ public class GroomerService {
         return toDTO(p);
     }
 
+    @Transactional
+    public void deleteGroomer(Long userId) {
+        User u = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (!"GROOMER".equalsIgnoreCase(u.getRole())) {
+            throw new IllegalArgumentException("El usuario seleccionado no es un peluquero.");
+        }
+        // Eliminamos primero el perfil y luego el usuario; los cortes históricos pueden permanecer si la regla de negocio lo permite.
+        profileRepository.findByUser(u).ifPresent(profileRepository::delete);
+        userRepository.delete(u);
+    }
+
     private GroomerProfileDTO toDTO(GroomerProfile p) {
         GroomerProfileDTO d = new GroomerProfileDTO();
         d.setId(p.getId());
@@ -86,4 +97,3 @@ public class GroomerService {
         return d;
     }
 }
-

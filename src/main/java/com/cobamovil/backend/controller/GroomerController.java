@@ -40,5 +40,11 @@ public class GroomerController {
         dto.setUserId(userId);
         return ResponseEntity.ok(groomerService.updateProfile(userId, dto));
     }
-}
 
+    @DeleteMapping("/{userId}/admin")
+    @PreAuthorize("hasAuthority('ADMIN') or hasRole('ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable Long userId) {
+        groomerService.deleteGroomer(userId);
+        return ResponseEntity.noContent().build();
+    }
+}
