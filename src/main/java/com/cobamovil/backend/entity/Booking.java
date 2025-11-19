@@ -1,7 +1,7 @@
 package com.cobamovil.backend.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -30,8 +30,9 @@ public class Booking {
     @Column(nullable = false, length = 30)
     private ServiceType serviceType;
 
+    // FIX: permitir persistir reservas para la fecha actual (la hora se valida por separado)
     @NotNull
-    @Future
+    @FutureOrPresent
     private LocalDate date;
 
     @NotNull
