@@ -1,5 +1,6 @@
 package com.cobamovil.backend.config;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -79,6 +80,40 @@ public class GlobalExceptionHandler {
         response.put("path", request.getDescription(false));
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    // Errores de recurso no encontrado (ej. reserva inexistente)
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleEntityNotFound(EntityNotFoundException ex, WebRequest request) {
+        logger.warn("Recurso no encontrado en {}: {}", request.getDescription(false), ex.getMessage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.NOT_FOUND.value());
+        response.put("error", "No encontrado");
+        // userMessage: mensaje claro cuando la reserva ya no existe
+        response.put("message", "No encontramos esta reserva. Es posible que ya haya sido modificada o eliminada.");
+        response.put("path", request.getDescription(false));
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    // Manejo de reglas de negocio (ej. cancelar o reprogramar en estado no permitido)
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex, WebRequest request) {
+        logger.warn("Operación no permitida en {}: {}", request.getDescription(false), ex.getMessage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.CONFLICT.value());
+        response.put("error", "Operación no permitida");
+        // userMessage: usamos el mensaje de negocio ya preparado en BookingService
+        response.put("message", ex.getMessage() != null && !ex.getMessage().isBlank()
+                ? ex.getMessage()
+                : "Esta operación no puede realizarse en el estado actual de la reserva.");
+        response.put("path", request.getDescription(false));
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     // Manejo de errores generales de runtime
