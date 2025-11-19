@@ -108,24 +108,23 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Start with safe defaults that always include local dev and the Vercel domain
-        List<String> originPatterns = new java.util.ArrayList<>(List.of(
-            "http://localhost:4200",
-            "https://cobamovil-frontend.vercel.app",
-            "https://*.vercel.app"
+        // Orígenes permitidos: producción y desarrollo local
+        List<String> allowedOrigins = new java.util.ArrayList<>(List.of(
+                "http://localhost:4200",
+                "https://cobamovil-frontend.vercel.app"
         ));
-        // If ALLOWED_ORIGINS is present, merge (do not replace) so defaults remain
-        String allowedOrigins = System.getenv("ALLOWED_ORIGINS");
-        if (allowedOrigins != null && !allowedOrigins.isBlank()) {
-            for (String o : allowedOrigins.split(",")) {
+        // Permitir añadir orígenes extra vía variable de entorno ALLOWED_ORIGINS (separados por coma)
+        String extra = System.getenv("ALLOWED_ORIGINS");
+        if (extra != null && !extra.isBlank()) {
+            for (String o : extra.split(",")) {
                 String trimmed = o.trim();
-                if (!trimmed.isEmpty() && !originPatterns.contains(trimmed)) {
-                    originPatterns.add(trimmed);
+                if (!trimmed.isEmpty() && !allowedOrigins.contains(trimmed)) {
+                    allowedOrigins.add(trimmed);
                 }
             }
         }
-        configuration.setAllowedOriginPatterns(originPatterns);
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
