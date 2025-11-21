@@ -305,14 +305,8 @@ public class AiRecommendationService {
                 return parsed;
             }
 
-            // If parsing failed but we have plain text, use it as advice only.
-            PetAiRecommendationResponse response = new PetAiRecommendationResponse();
-            response.setPetId(pet.getId());
-            response.setPetName(pet.getName());
-            response.setAdvice(aiText.trim());
-            response.setRecommendedServiceType(null);
-            response.setRecommendedFrequency(null);
-            return response;
+            logger.warn("Gemini response could not be parsed into structured JSON, using fallback recommendation.");
+            return generateFallbackRecommendation(pet, lastBooking);
 
         } catch (Exception ex) {
             logger.warn("Error while calling Gemini API, falling back to local recommendation: {}", ex.getMessage());
@@ -347,7 +341,11 @@ public class AiRecommendationService {
 
     private PetAiRecommendationResponse parseAiJson(String aiText, Pet pet) {
         try {
-            JsonNode root = objectMapper.readTree(aiText);
+            String jsonPayload = sanitizeAiJsonPayload(aiText);
+            if (jsonPayload == null || jsonPayload.isBlank()) {
+                return null;
+            }
+            JsonNode root = objectMapper.readTree(jsonPayload);
             if (!root.isObject()) {
                 return null;
             }
@@ -370,6 +368,50 @@ public class AiRecommendationService {
             logger.warn("AI JSON payload could not be parsed as object: {}", e.getMessage());
             return null;
         }
+    }
+
+    private String sanitizeAiJsonPayload(String aiText) {
+        if (aiText == null) {
+            return null;
+        }
+        String text = aiText.trim();
+
+        // Strip leading markdown fence if present
+        if (text.startsWith("```")) {
+            int firstLineBreak = text.indexOf('\n');
+            if (firstLineBreak > 0) {
+                text = text.substring(firstLineBreak + 1);
+            } else {
+                text = text.substring(3);
+            }
+        }
+        // Strip trailing markdown fence if present
+        if (text.endsWith("```")) {
+            int lastFence = text.lastIndexOf("```");
+            if (lastFence >= 0) {
+                text = text.substring(0, lastFence);
+            }
+        }
+
+        text = text.trim();
+
+        // Remove optional leading language identifier like "json"
+        String lower = text.toLowerCase(Locale.ROOT);
+        if (lower.startsWith("json")) {
+            text = text.substring(4).trim();
+            if (text.startsWith(":")) {
+                text = text.substring(1).trim();
+            }
+        }
+
+        // Try to isolate the JSON object between the first '{' and last '}'
+        int firstBrace = text.indexOf('{');
+        int lastBrace = text.lastIndexOf('}');
+        if (firstBrace >= 0 && lastBrace > firstBrace) {
+            text = text.substring(firstBrace, lastBrace + 1);
+        }
+
+        return text.trim();
     }
 
     private String textOrNull(JsonNode node, String field) {

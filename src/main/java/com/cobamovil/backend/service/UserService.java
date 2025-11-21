@@ -57,6 +57,14 @@ public class UserService {
             .orElseThrow(() -> new RuntimeException("Usuario con ID " + id + " no encontrado"));
         return convertToResponseDTO(user);
     }
+
+    // Obtener usuario por username (útil para /auth/me)
+    @Transactional(readOnly = true)
+    public UserResponseDTO getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("Usuario con username " + username + " no encontrado"));
+        return convertToResponseDTO(user);
+    }
     
     // Obtener todos los usuarios con paginación
     @Transactional(readOnly = true)

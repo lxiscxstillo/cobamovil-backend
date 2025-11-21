@@ -4,7 +4,9 @@ import com.cobamovil.backend.dto.AuthResponseDTO;
 import com.cobamovil.backend.dto.LoginRequestDTO;
 import com.cobamovil.backend.dto.RegisterRequestDTO;
 import com.cobamovil.backend.service.AuthService;
+import com.cobamovil.backend.service.UserService;
 import com.cobamovil.backend.security.JwtTokenProvider;
+import com.cobamovil.backend.dto.UserResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -13,6 +15,8 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 @Tag(name = "Authentication", description = "Endpoints de autenticación")
 public class AuthController {
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserService userService;
     private final ConcurrentHashMap<String, RateLimit> rateLimitMap = new ConcurrentHashMap<>();
     private static final int MAX_ATTEMPTS = 5;
     private static final long WINDOW_MS = TimeUnit.MINUTES.toMillis(1);
@@ -44,11 +49,12 @@ public class AuthController {
     }
     
     private final AuthService authService;
-    
+
     @Autowired
-    public AuthController(AuthService authService, JwtTokenProvider jwtTokenProvider) {
+    public AuthController(AuthService authService, JwtTokenProvider jwtTokenProvider, UserService userService) {
         this.authService = authService;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.userService = userService;
     }
     
     @PostMapping("/login")
@@ -85,6 +91,23 @@ public class AuthController {
 
         AuthResponseDTO response = authService.register(registerRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PutMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserResponseDTO> updateCurrentUserProfile(
+            Authentication authentication,
+            @Valid @RequestBody com.cobamovil.backend.dto.UserUpdateDTO updateDTO) {
+        UserResponseDTO current = userService.getUserByUsername(authentication.getName());
+        UserResponseDTO updated = userService.updateUser(current.getId(), updateDTO);
+        return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserResponseDTO> getCurrentUserProfile(Authentication authentication) {
+        UserResponseDTO dto = userService.getUserByUsername(authentication.getName());
+        return ResponseEntity.ok(dto);
     }
     
     @PostMapping("/logout")
