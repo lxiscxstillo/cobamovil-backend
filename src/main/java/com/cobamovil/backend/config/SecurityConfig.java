@@ -11,7 +11,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
-// ...existing code...
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -63,6 +62,7 @@ public class SecurityConfig {
                     throw new org.springframework.security.authentication.BadCredentialsException("Credenciales inválidas");
                 }
             }
+
             @Override
             public boolean supports(Class<?> authentication) {
                 return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
@@ -83,7 +83,7 @@ public class SecurityConfig {
             .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Endpoints públicos
+                // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/health").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
@@ -93,9 +93,10 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-resources/**").permitAll()
                 .requestMatchers("/webjars/**").permitAll()
                 .requestMatchers("/api/config/**").permitAll()
-                // Endpoints que requieren autenticación
+                // Endpoints that require authentication
+                .requestMatchers("/api/ai/**").authenticated()
                 .requestMatchers("/api/users/**").authenticated()
-                // Todos los demás endpoints requieren autenticación
+                // All other endpoints require authentication
                 .anyRequest().authenticated()
             );
 
@@ -108,12 +109,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Orígenes permitidos: producción y desarrollo local
+        // Allowed origins: production and local development
         List<String> allowedOrigins = new java.util.ArrayList<>(List.of(
                 "http://localhost:4200",
                 "https://cobamovil-frontend.vercel.app"
         ));
-        // Permitir añadir orígenes extra vía variable de entorno ALLOWED_ORIGINS (separados por coma)
+        // Allow adding extra origins via ALLOWED_ORIGINS env var (comma separated)
         String extra = System.getenv("ALLOWED_ORIGINS");
         if (extra != null && !extra.isBlank()) {
             for (String o : extra.split(",")) {
