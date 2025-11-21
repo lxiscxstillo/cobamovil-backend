@@ -95,7 +95,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/config/**").permitAll()
                 // Endpoints that require authentication
                 .requestMatchers("/api/ai/**").authenticated()
-                .requestMatchers("/api/users/**").authenticated()
+                .requestMatchers("/api/users/**").hasRole("ADMIN")
                 // All other endpoints require authentication
                 .anyRequest().authenticated()
             );
@@ -136,4 +136,3 @@ public class SecurityConfig {
         return source;
     }
 }
-

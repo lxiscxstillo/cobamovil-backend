@@ -46,7 +46,9 @@ public class PetService {
     public PetDTO update(String username, Long id, PetDTO dto) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User not found"));
         Pet p = petRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Pet not found"));
-        if (!p.getOwner().getId().equals(user.getId())) throw new IllegalArgumentException("Unauthorized");
+        if (!p.getOwner().getId().equals(user.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("You do not own this pet");
+        }
         apply(dto, p);
         Pet saved = petRepository.save(p);
         logHistory(saved, "UPDATED", summaryFrom(dto));
@@ -57,7 +59,9 @@ public class PetService {
     public void delete(String username, Long id) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User not found"));
         Pet p = petRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Pet not found"));
-        if (!p.getOwner().getId().equals(user.getId())) throw new IllegalArgumentException("Unauthorized");
+        if (!p.getOwner().getId().equals(user.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("You do not own this pet");
+        }
         petRepository.delete(p);
     }
 

@@ -225,7 +225,9 @@ public class BookingService {
     public BookingResponseDTO reschedule(Long id, String username, LocalDate date, java.time.LocalTime time, ServiceType serviceType) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User not found"));
         Booking b = bookingRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Booking not found"));
-        if (!b.getCustomer().getId().equals(user.getId())) throw new IllegalArgumentException("Unauthorized");
+        if (!b.getCustomer().getId().equals(user.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("You do not own this booking");
+        }
         if (b.getStatus() == BookingStatus.COMPLETED || b.getStatus() == BookingStatus.REJECTED) {
             throw new IllegalStateException("Cannot reschedule completed or rejected booking");
         }
@@ -244,7 +246,9 @@ public class BookingService {
     public void cancel(Long id, String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User not found"));
         Booking b = bookingRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Booking not found"));
-        if (!b.getCustomer().getId().equals(user.getId())) throw new IllegalArgumentException("Unauthorized");
+        if (!b.getCustomer().getId().equals(user.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("You do not own this booking");
+        }
         // Regla nueva: mientras la cita est├® pendiente, siempre se puede cancelar.
         // Si ya fue aceptada o est├í en otro estado, no se permite cancelarla.
         if (b.getStatus() != BookingStatus.PENDING) {

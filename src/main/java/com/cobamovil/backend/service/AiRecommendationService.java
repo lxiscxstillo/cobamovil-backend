@@ -53,7 +53,7 @@ public class AiRecommendationService {
 
         if (pet.getOwner() == null || pet.getOwner().getId() == null ||
                 !pet.getOwner().getId().equals(currentUserId)) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new org.springframework.security.access.AccessDeniedException("You do not own this pet");
         }
 
         Optional<Booking> lastBookingOpt = bookingRepository.findTopByPetOrderByDateDescTimeDesc(pet);
@@ -342,4 +342,3 @@ public class AiRecommendationService {
         return value == null ? "" : value;
     }
 }
-
